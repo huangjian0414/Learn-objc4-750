@@ -160,7 +160,7 @@ objc_object::ISA()
     }
     return (Class)isa.bits;
 #else
-    return (Class)(isa.bits & ISA_MASK);
+    return (Class)(isa.bits & ISA_MASK);//isa需要进行一次位运算，才能计算出真实地址，这个位运算的对象就是ISA_MASK
 #endif
 }
 

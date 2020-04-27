@@ -58,6 +58,15 @@ namespace {
 
 #include "isa.h"
 /// 共用体 union
+///联合类型 是C语言中的一种类型，简单来说，就是一种n选1的关系。比如isa_t 中包含有cls，bits， struct三个变量，它们的内存空间是重叠的。在实际使用时，仅能够使用它们中的一种，你把它当做cls，就不能当bits访问，你把它当bits，就不能用cls来访问。
+
+//isa_t其实可以看做有两个可能的取值，Class cls或struct
+/*
+uintptr_t bits 和 struct 其实是一个成员，它们都占据64位内存空间，之前已经说过，联合类型的成员内存空间是重叠的。在这里，由于uintptr_t bits 和 struct 都是占据64位内存，因此它们的内存空间是完全重叠的。而你将这块64位内存当做是uintptr_t bits 还是 struct，则完全是逻辑上的区分，在内存空间上，其实是一个东西。
+即uintptr_t bits 和 struct 是一个东西的两种表现形式。
+ 
+ 在runtime中，任何对struct 的操作和获取某些值，如extra_rc，实际上都是通过对uintptr_t bits 做位操作实现的。uintptr_t bits 和 struct 的关系可以看做，uintptr_t bits 向外提供了操作struct 的接口，而struct 本身则说明了uintptr_t bits 中各个二进制位的定义
+*/
 union isa_t {
     isa_t() { }
     isa_t(uintptr_t value) : bits(value) { }

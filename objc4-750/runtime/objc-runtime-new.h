@@ -716,7 +716,8 @@ class list_array_tt {
             return &list;
         }
     }
-
+    /// 新的list会插入到原始list的头部
+    //category中的方法，会‘覆盖’class的原始方法。其实并没有真正的‘覆盖’，而是由于cateogry中的方法被排到了原始方法的前面，那么在消息查找流程中，会返回首先被查找到的cateogry方法的实现。
     void attachLists(List* const * addedLists, uint32_t addedCount) {
         if (addedCount == 0) return;
 
@@ -828,15 +829,18 @@ struct class_rw_t {
     uint32_t flags;
     uint32_t version;
 
-    const class_ro_t *ro;
+    const class_ro_t *ro;// 类不可修改的原始核心
 
+    //method,property, protocol，可以被runtime 扩展，如Category
     method_array_t methods;
     property_array_t properties;
     protocol_array_t protocols;
-
+    
+    // 和继承相关的东西
     Class firstSubclass;
     Class nextSiblingClass;
-
+    
+    // Class对应的 符号名称
     char *demangledName;
 
 #if SUPPORT_INDEXED_ISA
@@ -920,6 +924,7 @@ private:
 public:
 
     class_rw_t* data() {
+        //FAST_DATA_MASK 3-46位
         return (class_rw_t *)(bits & FAST_DATA_MASK);
     }
     void setData(class_rw_t *newData)
@@ -1110,8 +1115,8 @@ public:
 
 struct objc_class : objc_object {
     // Class ISA;
-    Class superclass;
-    cache_t cache;             // formerly cache pointer and vtable
+    Class superclass; // 当前类的父类
+    cache_t cache;    //cache用于优化方法调用         // formerly cache pointer and vtable
     class_data_bits_t bits;    // class_rw_t * plus custom rr/alloc flags
 
     class_rw_t *data() { 

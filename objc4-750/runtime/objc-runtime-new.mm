@@ -781,7 +781,7 @@ attachCategories(Class cls, category_list *cats, bool flush_caches)
     int protocount = 0;
     int i = cats->count;
     bool fromBundle = NO;
-    while (i--) {
+    while (i--) {// 依次读取每一个category，将其methods，property，protocol添加到mlists，proplist，protolist中存储
         auto& entry = cats->list[i];
 
         method_list_t *mlist = entry.cat->methodsForMeta(isMeta);
@@ -801,18 +801,18 @@ attachCategories(Class cls, category_list *cats, bool flush_caches)
             protolists[protocount++] = protolist;
         }
     }
-
+    // 取出class的data()数据，其实是class_rw_t * 指针，其对应结构体实例存储了class的基本信息
     auto rw = cls->data();
 
     prepareMethodLists(cls, mlists, mcount, NO, fromBundle);
-    rw->methods.attachLists(mlists, mcount);
+    rw->methods.attachLists(mlists, mcount);// 将category中的method 添加到class中
     free(mlists);
-    if (flush_caches  &&  mcount > 0) flushCaches(cls);
+    if (flush_caches  &&  mcount > 0) flushCaches(cls);// 如果需要，同时刷新class的method list cache
 
-    rw->properties.attachLists(proplists, propcount);
+    rw->properties.attachLists(proplists, propcount);// 将category的property添加到class中
     free(proplists);
 
-    rw->protocols.attachLists(protolists, protocount);
+    rw->protocols.attachLists(protolists, protocount);// 将category的protocol添加到class中
     free(protolists);
 }
 
@@ -907,12 +907,13 @@ static void remethodizeClass(Class cls)
     isMeta = cls->isMetaClass();
 
     // Re-methodizing: check for more categories
+    //unattachedCategoriesForClass。//取出还未被附加到class上的category list
     if ((cats = unattachedCategoriesForClass(cls, false/*not realizing*/))) {
         if (PrintConnecting) {
             _objc_inform("CLASS: attaching categories to class '%s' %s", 
                          cls->nameForLogging(), isMeta ? "(meta)" : "");
         }
-        
+        //将这些category附加到class上
         attachCategories(cls, cats, true /*flush caches*/);        
         free(cats);
     }
@@ -1855,6 +1856,7 @@ static void reconcileInstanceVariables(Class cls, Class supercls, const class_ro
 * Returns the real class structure for the class. 
 * Locking: runtimeLock must be write-locked by the caller
 **********************************************************************/
+/// class没有调用realizeClass之前，不是真正完整的类
 static Class realizeClass(Class cls)
 {
     runtimeLock.assertLocked();
@@ -2727,6 +2729,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
             // Then, rebuild the class's method lists (etc) if 
             // the class is realized. 
             bool classExists = NO;
+            // 如果Category中有实例方法，协议，实例属性，会改写target class的结构
             if (cat->instanceMethods ||  cat->protocols  
                 ||  cat->instanceProperties) 
             {
@@ -2741,7 +2744,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
                                  classExists ? "on existing class" : "");
                 }
             }
-
+            // 如果category中有类方法，协议，或类属性(目前OC版本不支持类属性), 会改写target class的元类结构
             if (cat->classMethods  ||  cat->protocols  
                 ||  (hasClassProperties && cat->_classProperties)) 
             {
@@ -6654,7 +6657,7 @@ void *objc_destructInstance(id obj)
 
         // This order is important.
         if (cxx) object_cxxDestruct(obj);
-        if (assoc) _object_remove_assocations(obj);
+        if (assoc) _object_remove_assocations(obj);// 移除所有的关联对象，并将其自身从AssociationsManager的map中移除
         obj->clearDeallocating();
     }
 

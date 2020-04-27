@@ -574,6 +574,8 @@ map_images_nolock(unsigned mhCount, const char * const mhPaths[],
     }
 
     if (hCount > 0) {
+       /// 读取OC相关sections，并以此来初始化OC内存环境
+        // 我们使用的类，协议和category，都是在_read_images 方法中读取出来的
         _read_images(hList, hCount, totalClasses, unoptimizedTotalClasses);
     }
 
@@ -871,7 +873,7 @@ void _objc_atfork_child()
 * Bootstrap initialization. Registers our image notifier with dyld.
 * Called by libSystem BEFORE library initialization time
 **********************************************************************/
-
+//OC入口点函数
 void _objc_init(void)
 {
     static bool initialized = false;
@@ -884,7 +886,11 @@ void _objc_init(void)
     static_init();
     lock_init();
     exception_init();
-
+    //向dyld注册监听Mach-O中OC相关section被加载入\载出内存的事件
+    //map_images：当dyld已将images加载入内存时
+    //load_images：当dyld初始化image后。OC调用类的+load方法，就是在这时进行的
+    //unmap_image：当dyld将images移除内存时
+    //category写入target class的方法列表，则是在_dyld_objc_notify_mapped，即将Mach-O相关sections都加载到内存之后所发生的
     _dyld_objc_notify_register(&map_images, load_images, unmap_image);
 }
 

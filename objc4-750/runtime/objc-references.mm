@@ -273,9 +273,9 @@ void _object_set_associative_reference(id object, void *key, id value, uintptr_t
     ObjcAssociation old_association(0, nil);
     id new_value = value ? acquireValue(value, policy) : nil;
     {
-        AssociationsManager manager;
+        AssociationsManager manager;// 这是一个单例，内部保存一个全局的static AssociationsHashMap *_map; 用于保存所有的关联对象。
         AssociationsHashMap &associations(manager.associations());
-        disguised_ptr_t disguised_object = DISGUISE(object);
+        disguised_ptr_t disguised_object = DISGUISE(object);// 取反object 地址 作为accociative key
         if (new_value) {
             // break any existing association.
             AssociationsHashMap::iterator i = associations.find(disguised_object);
@@ -296,7 +296,7 @@ void _object_set_associative_reference(id object, void *key, id value, uintptr_t
                 (*refs)[key] = ObjcAssociation(policy, new_value);
                 object->setHasAssociatedObjects();
             }
-        } else {
+        } else {// 如果传入的关联对象值为nil，则断开关联
             // setting the association to nil breaks the association.
             AssociationsHashMap::iterator i = associations.find(disguised_object);
             if (i !=  associations.end()) {
@@ -310,7 +310,7 @@ void _object_set_associative_reference(id object, void *key, id value, uintptr_t
         }
     }
     // release the old value (outside of the lock).
-    if (old_association.hasValue()) ReleaseValue()(old_association);
+    if (old_association.hasValue()) ReleaseValue()(old_association);// 释放掉old关联对象。(如果多次设置同一个key的value,这里会释放之前的value）
 }
 
 void _object_remove_assocations(id object) {
