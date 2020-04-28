@@ -4809,7 +4809,7 @@ Method class_getInstanceMethod(Class cls, SEL sel)
 
 #warning fixme build and search caches
 
-    return _class_getMethod(cls, sel);
+    return _class_getMethod(cls, sel);//除了查找当前类，还会沿着继承链向上查找对应的Method
 }
 
 
@@ -5696,15 +5696,17 @@ addMethod(Class cls, SEL name, IMP imp, const char *types, bool replace)
     assert(cls->isRealized());
 
     method_t *m;
-    if ((m = getMethodNoSuper_nolock(cls, name))) {
+    if ((m = getMethodNoSuper_nolock(cls, name))) {// 只从子类查找
         // already exists
-        if (!replace) {
+         // 方法已经存在
+        if (!replace) {// 如果选择不替换，则返回原始的方法，添加方法失败
             result = m->imp;
-        } else {
+        } else {// 如果选择替换，则返回原始方法，同时，替换为新的方法
             result = _method_setImplementation(cls, m, imp);
         }
     } else {
         // fixme optimize
+        // 方法不存在, 则在class的方法列表中添加方法, 并返回nil
         method_list_t *newlist;
         newlist = (method_list_t *)calloc(sizeof(*newlist), 1);
         newlist->entsizeAndFlags = 
@@ -5809,7 +5811,7 @@ class_addMethod(Class cls, SEL name, IMP imp, const char *types)
     if (!cls) return NO;
 
     mutex_locker_t lock(runtimeLock);
-    return ! addMethod(cls, name, imp, types ?: "", NO);
+    return ! addMethod(cls, name, imp, types ?: "", NO);// 不会替换原始实现
 }
 
 
@@ -5819,7 +5821,7 @@ class_replaceMethod(Class cls, SEL name, IMP imp, const char *types)
     if (!cls) return nil;
 
     mutex_locker_t lock(runtimeLock);
-    return addMethod(cls, name, imp, types ?: "", YES);
+    return addMethod(cls, name, imp, types ?: "", YES);// 会替换原始实现
 }
 
 
@@ -6656,9 +6658,9 @@ void *objc_destructInstance(id obj)
         bool assoc = obj->hasAssociatedObjects();
 
         // This order is important.
-        if (cxx) object_cxxDestruct(obj);
+        if (cxx) object_cxxDestruct(obj);// 调用C++析构函数
         if (assoc) _object_remove_assocations(obj);// 移除所有的关联对象，并将其自身从AssociationsManager的map中移除
-        obj->clearDeallocating();
+        obj->clearDeallocating();// 清理相关的引用
     }
 
     return obj;
@@ -6674,7 +6676,7 @@ id
 object_dispose(id obj)
 {
     if (!obj) return nil;
-
+    //先调用objc_destructInstance(obj)来析构obj，再用 free(obj)来释放内存
     objc_destructInstance(obj);    
     free(obj);
 

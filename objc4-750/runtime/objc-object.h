@@ -90,7 +90,7 @@ objc_object::getIsa()
     }
 }
 
-
+// tagged pointer是一种特殊的“指针”，其特殊在于，其实它存储的并不是地址，而是真实的数据和一些附加的信息。
 inline bool 
 objc_object::isTaggedPointer() 
 {
@@ -405,7 +405,7 @@ objc_object::clearDeallocating()
         // Slow path for raw pointer isa.
         sidetable_clearDeallocating();
     }
-    else if (slowpath(isa.weakly_referenced  ||  isa.has_sidetable_rc)) {
+    else if (slowpath(isa.weakly_referenced  ||  isa.has_sidetable_rc)) {//做了weak引用（isa.weakly_referenced ） 或 使用了sideTable的辅助引用计数（isa.has_sidetable_rc）
         // Slow path for non-pointer isa with weak refs and/or side table data.
         clearDeallocating_slow();
     }
@@ -419,6 +419,7 @@ objc_object::rootDealloc()
 {
     if (isTaggedPointer()) return;  // fixme necessary?
 
+    ///是否可以快速释放： 对象没有被weak引用!isa.weakly_referenced，没有关联对象!isa.has_assoc，没有自定义的C++析构方法!isa.has_cxx_dtor，没有用到sideTable来做引用计数 !isa.has_sidetable_rc。
     if (fastpath(isa.nonpointer  &&  
                  !isa.weakly_referenced  &&  
                  !isa.has_assoc  &&  
