@@ -397,7 +397,7 @@ objc_object::rootIsDeallocating()
     return sidetable_isDeallocating();
 }
 
-
+//（1）将weak 引用置为nil，并在weak_table_t中删除对象节点。（2）如果有side table计数借位，则side table中对应的节点移除
 inline void 
 objc_object::clearDeallocating()
 {
@@ -469,7 +469,15 @@ objc_object::rootTryRetain()
 {
     return rootRetain(true, false) ? true : false;
 }
-
+/*
+ 取出当前对象的isa.bits值
+ isa.bits分别赋值给oldisa和newisa
+ 根据isa_t的标志位newisa.nonpointer，来判断runtime是否只开启了isa优化。
+ 如果newisa.nonpointer为0，则走老的流程，调用sidetable_retain方法，在SideTable中找到this对应的节点，side table refcntStorage + 1
+ 如果newisa.nonpointer为1，则在newisa.extra_rc上做引用计数+1操作。同时，需要判断是否计数溢出。
+ 如果newisa.extra_rc溢出，则进行溢出处理：newisa.extra_rc计数减半，将计数的另一半放到SideTable中。并设置newisa.has_sidetable_rc = true，表明引用计数借用了SideTable
+ 最后，调用StoreExclusive，更新对象的isa.bits。
+ **/
 ALWAYS_INLINE id 
 objc_object::rootRetain(bool tryRetain, bool handleOverflow)
 {

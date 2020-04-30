@@ -92,8 +92,8 @@ enum HaveNew { DontHaveNew = false, DoHaveNew = true };
 //SideTables 是全局的
 struct SideTable {
     spinlock_t slock;//自旋锁。防止多线程访问SideTable冲突
-    RefcountMap refcnts;//用于存储对象引用计数的map
-    weak_table_t weak_table;//用于存储对象弱引用的map
+    RefcountMap refcnts;//用于存储对象引用计数的map //key是obj的地址，而value，则是obj对象的引用计数
+    weak_table_t weak_table;//用于存储对象弱引用的map //以obj地址为key，弱引用obj的指针的地址作为value的hash表
 
     SideTable() {
         memset(&weak_table, 0, sizeof(weak_table));
@@ -169,7 +169,7 @@ alignas(StripedMap<SideTable>) static uint8_t
 static void SideTableInit() {
     new (SideTableBuf) StripedMap<SideTable>();
 }
-
+/// 全局数组
 static StripedMap<SideTable>& SideTables() {
     return *reinterpret_cast<StripedMap<SideTable>*>(SideTableBuf);
 }
@@ -239,7 +239,9 @@ objc_retain_autorelease(id obj)
     return objc_autorelease(objc_retain(obj));
 }
 
-
+//__strong Student *student = [[Student alloc] init];
+//修饰符是__strong。location就是引用指针（Student *student）  obj就是被引用的对象，即Student实例
+//__strong引用会使得被引用对象计数+1，同时，会使得之前的饮用对象计数-1。
 void
 objc_storeStrong(id *location, id obj)
 {
@@ -247,9 +249,9 @@ objc_storeStrong(id *location, id obj)
     if (obj == prev) {
         return;
     }
-    objc_retain(obj);
-    *location = obj;
-    objc_release(prev);
+    objc_retain(obj);//1.  retain obj
+    *location = obj;//2.  将location 指向 obj
+    objc_release(prev);//3. release location之前指向的obj
 }
 
 
@@ -266,6 +268,13 @@ enum CrashIfDeallocating {
 };
 template <HaveOld haveOld, HaveNew haveNew,
           CrashIfDeallocating crashIfDeallocating>
+/*
+ 取出引用对象对应的SideTable节点SideTable *newTable;
+ 调用weak_register_no_lock方法，将weak pointer的地址记录到对象对应的weak_entry_t中。
+ 更新对象isa的weakly_referenced bit标志位，表明该对象被弱引用了。
+ 将weak pointer指向对象
+ 返回对象
+ **/
 static id 
 storeWeak(id *location, objc_object *newObj)
 {
@@ -369,6 +378,9 @@ storeWeak(id *location, objc_object *newObj)
  * 
  * @return \e newObj
  */
+//__weak Son *son = [Son new];
+//son = [Son new];
+///当weakStudent再次指向另一个对象时，则不会调用objc_initWeak方法，而是会调用objc_storeWeak方法：只不过DontHaveOld参数换成了DoHaveOld
 id
 objc_storeWeak(id *location, id newObj)
 {
