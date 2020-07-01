@@ -102,7 +102,7 @@ static void _objc_crashlog(const char *message)
 
     mutex_locker_t lock(crashlog_lock);
 
-    char *oldmsg = (char *)CRGetCrashLogMessage();
+    char *oldmsg = nil;//(char *)CRGetCrashLogMessage();
     size_t oldlen;
     const size_t limit = 8000;
 
@@ -124,7 +124,7 @@ static void _objc_crashlog(const char *message)
         if (*c == '\n') *c = '\0';
         
         if (oldmsg) free(oldmsg);
-        CRSetCrashLogMessage(newmsg);
+        //CRSetCrashLogMessage(newmsg);
     }
 }
 

@@ -663,7 +663,7 @@ class AutoreleasePoolPage
 #   define EMPTY_POOL_PLACEHOLDER ((id*)1)
 
     ///POOL_BOUNDARY 哨兵，当需要将AutoreleasePoolPage 中存储的对象指针依次出栈时，会执行到POOL_BOUNDARY为止
-#   define POOL_BOUNDARY nil。
+#   define POOL_BOUNDARY nil
     static pthread_key_t const key = AUTORELEASE_POOL_KEY;
     static uint8_t const SCRIBBLE = 0xA3;  // 0xA3A3A3A3 after releasing
     static size_t const SIZE = 

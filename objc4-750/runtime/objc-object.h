@@ -153,7 +153,7 @@ inline Class
 objc_object::ISA() 
 {
     assert(!isTaggedPointer()); 
-#if SUPPORT_INDEXED_ISA
+#if SUPPORT_INDEXED_ISA  //是否支持优化的 isa 指针
     if (isa.nonpointer) {
         uintptr_t slot = isa.indexcls;
         return classForIndex((unsigned)slot);
@@ -209,9 +209,9 @@ objc_object::initIsa(Class cls, bool nonpointer, bool hasCxxDtor)
 { 
     assert(!isTaggedPointer()); 
     
-    if (!nonpointer) {
+    if (!nonpointer) {//普通指针
         isa.cls = cls;
-    } else {
+    } else {// 采用了isa 优化 会使用位域存放更多的信息
         assert(!DisableNonpointerIsa);
         assert(!cls->instancesRequireRawIsa());
 
