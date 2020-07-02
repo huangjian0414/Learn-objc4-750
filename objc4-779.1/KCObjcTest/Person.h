@@ -11,6 +11,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface Person : NSObject
 
+//@property(nonatomic,assign)BOOL sex;
+
 @end
 
 NS_ASSUME_NONNULL_END
