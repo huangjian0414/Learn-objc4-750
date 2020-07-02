@@ -1,8 +1,8 @@
 //
 //  main.m
-//  debug-objc
+//  LearnTest
 //
-//  Created by Closure on 2018/12/4.
+//  Created by huangjian on 2020/7/2.
 //
 
 #import <Foundation/Foundation.h>
@@ -10,7 +10,7 @@
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
         // insert code here...
-       // NSLog(@"Hello, World! %@", [NSString class]);
+        
     }
     return 0;
 }

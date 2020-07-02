@@ -1752,6 +1752,7 @@ _objc_rootAllocWithZone(Class cls, malloc_zone_t *zone)
 
 // Call [cls alloc] or [cls allocWithZone:nil], with appropriate 
 // shortcutting optimizations.
+// fastpath(x) 理解成真值判断，slowpath(x) 理解成假值判断
 static ALWAYS_INLINE id
 callAlloc(Class cls, bool checkNil, bool allocWithZone=false)
 {
@@ -1765,6 +1766,7 @@ callAlloc(Class cls, bool checkNil, bool allocWithZone=false)
         // No alloc/allocWithZone implementation. Go straight to the allocator.
         // fixme store hasCustomAWZ in the non-meta class and 
         // add it to canAllocFast's summary
+        //对象不存在、没有 isa 等情况才会为真值
         if (fastpath(cls->canAllocFast())) {
             // No ctors, raw isa, etc. Go straight to the metal.
             bool dtor = cls->hasCxxDtor();
@@ -1773,7 +1775,7 @@ callAlloc(Class cls, bool checkNil, bool allocWithZone=false)
             obj->initInstanceIsa(cls, dtor);
             return obj;
         }
-        else {
+        else {// false
             // Has ctor or raw isa or something. Use the slower path.
             id obj = class_createInstance(cls, 0);
             if (slowpath(!obj)) return callBadAllocHandler(cls);

@@ -759,6 +759,7 @@ class_replaceMethod(Class _Nullable cls, SEL _Nonnull name, IMP _Nonnull imp,
  *       variable depends on the ivar's type and the machine architecture. 
  *       For variables of any pointer type, pass log2(sizeof(pointer_type)).
  */
+/// 在objc_allocateClassPair之后,objc_registerClassPair之前
 OBJC_EXPORT BOOL
 class_addIvar(Class _Nullable cls, const char * _Nonnull name, size_t size, 
               uint8_t alignment, const char * _Nullable types) 

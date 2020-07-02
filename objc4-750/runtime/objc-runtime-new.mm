@@ -1152,6 +1152,7 @@ static void addNamedClass(Class cls, const char *name, Class replacing = nil)
         // lookup must be in the secondary meta->nonmeta table.
         addNonMetaClass(cls);
     } else {
+        /// 将类信息插入到hash表
         NXMapInsert(gdb_objc_realized_classes, name, cls);
     }
     assert(!(cls->data()->flags & RO_META));
@@ -6151,7 +6152,11 @@ static void objc_initializeClassPair_internal(Class superclass, const char *name
     cls->data()->ro = cls_ro_w;
     meta->data()->ro = meta_ro_w;
 
-    // Set basic info
+    // Set basic info  基本信息
+    // RW_CONSTRUCTING 类已分配但还未注册
+    // RW_COPIED_RO class_rw_t->ro 来自 class_ro_t 结构的复制
+    // RW_REALIZED //  class_t->data 的结构为 class_rw_t
+    // RW_REALIZING // 类已开始分配，但并未完成
 
     cls->data()->flags = RW_CONSTRUCTING | RW_COPIED_RO | RW_REALIZED | RW_REALIZING;
     meta->data()->flags = RW_CONSTRUCTING | RW_COPIED_RO | RW_REALIZED | RW_REALIZING;

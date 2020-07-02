@@ -513,7 +513,7 @@ struct locstamped_category_list_t {
 #define FAST_IS_SWIFT_STABLE    (1UL<<1)
 // summary bit for fast alloc path: !hasCxxCtor and 
 //   !instancesRequireRawIsa and instanceSize fits into shiftedSize
-#define FAST_ALLOC              (1UL<<2)
+#define FAST_ALLOC              (1UL<<2)   /// FAST_ALLOC 被#elif 1 拦截 ， 无效
 // data pointer
 #define FAST_DATA_MASK          0x00007ffffffffff8UL
 // class or superclass has .cxx_construct implementation
@@ -1063,7 +1063,7 @@ public:
     }
 
     bool canAllocFast() {
-        return bits & FAST_ALLOC;
+        return bits & FAST_ALLOC;// false
     }
 #else
     size_t fastInstanceSize() {
