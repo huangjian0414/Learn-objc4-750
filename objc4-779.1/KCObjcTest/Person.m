@@ -8,5 +8,14 @@
 #import "Person.h"
 
 @implementation Person
++ (void)load{
+    NSLog(@"Person load");
+}
+-(void)sayYes{
+    NSLog(@"Person sayYes");
+}
 
++(void)sayHello{
+    
+}
 @end

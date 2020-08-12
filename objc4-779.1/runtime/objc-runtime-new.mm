@@ -1119,7 +1119,7 @@ public:
 
         auto &map = get();
         auto it = map.find(previously);
-
+        
         if (it != map.end()) {
             category_list &list = it->second;
             if (flags & ATTACH_CLASS_AND_METACLASS) {
@@ -1127,6 +1127,7 @@ public:
                 attachCategories(cls, list.array(), list.count(), otherFlags | ATTACH_CLASS);
                 attachCategories(cls->ISA(), list.array(), list.count(), otherFlags | ATTACH_METACLASS);
             } else {
+            
                 attachCategories(cls, list.array(), list.count(), flags);
             }
             map.erase(it);
@@ -1243,6 +1244,7 @@ static void
 attachCategories(Class cls, const locstamped_category_t *cats_list, uint32_t cats_count,
                  int flags)
 {
+    //printf("\n%s",object_getClassName(cls));
     if (slowpath(PrintReplacedMethods)) {
         printReplacements(cls, cats_list, cats_count);
     }
@@ -1262,6 +1264,7 @@ attachCategories(Class cls, const locstamped_category_t *cats_list, uint32_t cat
      * and call attachLists on the chunks. attachLists prepends the
      * lists, so the final result is in the expected order.
      */
+    /// 分配method_list_t *， property_list_t *， protocol_list_t *的数组空间，数组大小等于category的个数
     constexpr uint32_t ATTACH_BUFSIZ = 64;
     method_list_t   *mlists[ATTACH_BUFSIZ];
     property_list_t *proplists[ATTACH_BUFSIZ];
@@ -1273,12 +1276,23 @@ attachCategories(Class cls, const locstamped_category_t *cats_list, uint32_t cat
     bool fromBundle = NO;
     bool isMeta = (flags & ATTACH_METACLASS);
     auto rw = cls->data();
-
+    
+    const char *tempChar;
+    tempChar = cls->nameForLogging();
+    if (strcmp(tempChar, "Person")==0) {
+        
+    }
+    /// 依次读取每一个category，将其methods，property，protocol添加到mlists，proplist，protolist中存储
     for (uint32_t i = 0; i < cats_count; i++) {
         auto& entry = cats_list[i];
 
         method_list_t *mlist = entry.cat->methodsForMeta(isMeta);
+        //printf("22-%s\n",entry.cat->name);
         if (mlist) {
+            
+            if (strcmp(entry.cat->name, "HJJJJJ")==0) {
+                
+            }
             if (mcount == ATTACH_BUFSIZ) {
                 prepareMethodLists(cls, mlists, mcount, NO, fromBundle);
                 rw->methods.attachLists(mlists, mcount);
@@ -1311,9 +1325,10 @@ attachCategories(Class cls, const locstamped_category_t *cats_list, uint32_t cat
     if (mcount > 0) {
         prepareMethodLists(cls, mlists + ATTACH_BUFSIZ - mcount, mcount, NO, fromBundle);
         rw->methods.attachLists(mlists + ATTACH_BUFSIZ - mcount, mcount);
+        
         if (flags & ATTACH_EXISTING) flushCaches(cls);
     }
-
+    
     rw->properties.attachLists(proplists + ATTACH_BUFSIZ - propcount, propcount);
 
     rw->protocols.attachLists(protolists + ATTACH_BUFSIZ - protocount, protocount);
@@ -1329,7 +1344,7 @@ attachCategories(Class cls, const locstamped_category_t *cats_list, uint32_t cat
 static void methodizeClass(Class cls, Class previously)
 {
     runtimeLock.assertLocked();
-
+    
     bool isMeta = cls->isMetaClass();
     auto rw = cls->data();
     auto ro = rw->ro;
@@ -1339,10 +1354,15 @@ static void methodizeClass(Class cls, Class previously)
         _objc_inform("CLASS: methodizing class '%s' %s", 
                      cls->nameForLogging(), isMeta ? "(meta)" : "");
     }
-
+    
     // Install methods and properties that the class implements itself.
     method_list_t *list = ro->baseMethods();
     if (list) {
+        const char *tempChar;
+        tempChar = cls->nameForLogging();
+        if (strcmp(tempChar, "Person")==0) {
+            
+        }
         prepareMethodLists(cls, &list, 1, YES, isBundleClass(cls));
         rw->methods.attachLists(&list, 1);
     }
@@ -2448,7 +2468,11 @@ static Class realizeClassWithoutSwift(Class cls, Class previously)
     ASSERT(cls == remapClass(cls));
 
     // fixme verify class is not in an un-dlopened part of the shared cache?
-
+    const char *tempChar;
+    tempChar = cls->nameForLogging();
+    if (strcmp(tempChar, "Person")==0) {
+        
+    }
     ro = (const class_ro_t *)cls->data();
     if (ro->flags & RO_FUTURE) {
         // This was a future class. rw data is already allocated.
@@ -3375,6 +3399,11 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
             Class cls = (Class)classlist[i];
             Class newCls = readClass(cls, headerIsBundle, headerIsPreoptimized);
 
+            const char *tempChar;
+            tempChar = cls->nameForLogging();
+            if (strcmp(tempChar, "Person")==0) {
+                
+            }
             if (newCls != cls  &&  newCls) {
                 // Class was moved but not deleted. Currently this occurs 
                 // only when the new class resolved a future class.
@@ -3386,7 +3415,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
             }
         }
     }
-
+    
     ts.log("IMAGE TIMES: discover classes");
 
     // Fix up remapped classes
@@ -3480,6 +3509,8 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
 
     ts.log("IMAGE TIMES: fix up @protocol references");
 
+    
+    
     // Discover categories.
     for (EACH_HEADER) {
         bool hasClassProperties = hi->info()->hasCategoryClassProperties();
@@ -3487,6 +3518,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
         auto processCatlist = [&](category_t * const *catlist) {
             for (i = 0; i < count; i++) {
                 category_t *cat = catlist[i];
+                //printf("%s\n",cat->name);
                 Class cls = remapClass(cat->cls);
                 locstamped_category_t lc{cat, hi};
                 
@@ -3501,6 +3533,9 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
                     continue;
                 }
                 
+                if (strcmp(cat->name, "HJJJJJ")==0) {
+                    
+                }
                 // Process this category.
                 if (cls->isStubClass()) {
                     // Stub classes are never realized. Stub classes
@@ -3547,7 +3582,6 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
         processCatlist(_getObjc2CategoryList(hi, &count));
         processCatlist(_getObjc2CategoryList2(hi, &count));
     }
-
     ts.log("IMAGE TIMES: discover categories");
 
     // Category discovery MUST BE Late to avoid potential races
@@ -3563,7 +3597,7 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
         for (i = 0; i < count; i++) {
             Class cls = remapClass(classlist[i]);
             if (!cls) continue;
-
+            //printf("11-%s\n",cls->nameForLogging());
             addClassTableEntry(cls);
 
             if (cls->isSwiftStable()) {
@@ -3576,7 +3610,13 @@ void _read_images(header_info **hList, uint32_t hCount, int totalClasses, int un
                 // We can't disallow all Swift classes because of
                 // classes like Swift.__EmptyArrayStorage
             }
+            const char *tempChar;
+            tempChar = cls->nameForLogging();
+            if (strcmp(tempChar, "Person")==0) {
+                
+            }
             realizeClassWithoutSwift(cls, nil);
+            
         }
     }
 
@@ -3711,6 +3751,7 @@ void prepare_load_methods(const headerType *mhdr)
     for (i = 0; i < count; i++) {
         category_t *cat = categorylist[i];
         Class cls = remapClass(cat->cls);
+        //printf("%s--%s\n",cls->nameForLogging(),cat->name);
         if (!cls) continue;  // category for ignored weak-linked class
         if (cls->isSwiftStable()) {
             _objc_fatal("Swift class extensions and categories on Swift "

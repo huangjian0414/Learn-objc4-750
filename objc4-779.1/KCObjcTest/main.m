@@ -7,16 +7,19 @@
 
 #import <Foundation/Foundation.h>
 #import "Person.h"
-#include "runtime.h"
+#import "Person+HJJJJJ.h"
+#import "Person+HTTTTT.h"
+#import "runtime.h"
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
         // insert code here...
         NSLog(@"Hello, World!");
         
-        Person *person = [Person alloc];
-//        NSLog(@"1- %zd",class_getInstanceSize([Person class]));
-//        NSLog(@"2- %lu %lu %lu",(uintptr_t)[person class],(uintptr_t)person,(uintptr_t)[Person class]);
+        Person *person = [Person new];
+        Class cls = object_getClass(person);
+        //[person sayYes];
+        [person sayNo];
         
     }
     return 0;
