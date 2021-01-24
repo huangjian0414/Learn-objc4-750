@@ -10,7 +10,11 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface Person : Human
-
+//{
+//    int _age;
+//    int _age1;
+//    int _age2;
+//}
 //@property(nonatomic,assign)BOOL sex;
 -(void)sayYes;
 +(void)sayHello;

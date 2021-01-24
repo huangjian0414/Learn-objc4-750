@@ -347,10 +347,11 @@ public:
             size_t size = _flags & FAST_CACHE_ALLOC_MASK;
             // remove the FAST_CACHE_ALLOC_DELTA16 that was added
             // by setFastInstanceSize
+            
             return align16(size + extra - FAST_CACHE_ALLOC_DELTA16);
         }
     }
-
+    
     void setFastInstanceSize(size_t newSize)
     {
         // Set during realization or construction only. No locking needed.
@@ -361,9 +362,12 @@ public:
         // to yield the proper 16byte aligned allocation size with a single mask
         sizeBits = word_align(newSize) + FAST_CACHE_ALLOC_DELTA16;
         sizeBits &= FAST_CACHE_ALLOC_MASK;
+        
         if (newSize <= sizeBits) {
             newBits |= sizeBits;
         }
+        //uint16_t a = ((_flags & ~FAST_CACHE_ALLOC_MASK)|(((word_align(newSize) + FAST_CACHE_ALLOC_DELTA16))&FAST_CACHE_ALLOC_MASK))&FAST_CACHE_ALLOC_MASK;
+        
         _flags = newBits;
     }
 #else

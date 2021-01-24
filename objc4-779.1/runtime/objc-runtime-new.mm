@@ -7437,6 +7437,11 @@ _class_createInstanceFromZone(Class cls, size_t extraBytes, void *zone,
     bool fast = cls->canAllocNonpointer();
     size_t size;
 
+    const char *tempChar;
+    tempChar = object_getClassName(cls);
+    if (strcmp(tempChar, "NSObject")==0) {
+        
+    }
     size = cls->instanceSize(extraBytes);
     if (outAllocatedSize) *outAllocatedSize = size;
 

@@ -2317,10 +2317,16 @@ __attribute__((objc_nonlazy_class))
 }
 
 - (NSUInteger)retainCount {
+    
     return _objc_rootRetainCount(self);
 }
 
 + (id)alloc {
+    const char *tempChar;
+    tempChar = object_getClassName(self);
+    if (strcmp(tempChar, "Person")==0) {
+        
+    }
     return _objc_rootAlloc(self);
 }
 
