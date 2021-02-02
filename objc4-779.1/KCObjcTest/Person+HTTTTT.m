@@ -8,9 +8,9 @@
 #import "Person+HTTTTT.h"
 
 @implementation Person (HTTTTT)
-+(void)load{
-    NSLog(@"HTTTTT Load");
-}
+//+(void)load{
+//    NSLog(@"HTTTTT Load");
+//}
 -(void)sayYes{
     NSLog(@"HTTTTT sayYes");
 }

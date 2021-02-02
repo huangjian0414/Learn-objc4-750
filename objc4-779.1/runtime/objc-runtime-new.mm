@@ -2060,6 +2060,11 @@ static Class initializeAndMaybeRelock(Class cls, id inst,
 {
     lock.assertLocked();
     ASSERT(cls->isRealized());
+    const char *tempChar;
+    tempChar = object_getClassName(cls);
+    if (strcmp(tempChar, "Person")==0) {
+        
+    }
 
     if (cls->isInitialized()) {
         if (!leaveLocked) lock.unlock();
@@ -6065,7 +6070,6 @@ IMP lookUpImpOrForward(id inst, SEL sel, Class cls, int behavior)
         cls = realizeClassMaybeSwiftAndLeaveLocked(cls, runtimeLock);
         // runtimeLock may have been dropped but is now locked again
     }
-
     if (slowpath((behavior & LOOKUP_INITIALIZE) && !cls->isInitialized())) {
         cls = initializeAndLeaveLocked(cls, inst, runtimeLock);
         // runtimeLock may have been dropped but is now locked again

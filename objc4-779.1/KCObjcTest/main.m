@@ -9,6 +9,10 @@
 #import "Person.h"
 #import "Person+HJJJJJ.h"
 #import "Person+HTTTTT.h"
+#import "Student.h"
+#import "NewStudent.h"
+#import "NewStudent1.h"
+
 //#import "runtime.h"
 
 int main(int argc, const char * argv[]) {
@@ -16,7 +20,10 @@ int main(int argc, const char * argv[]) {
         // insert code here...
         NSLog(@"Hello, World!");
         //NSObject *obj = [[NSObject alloc]init];
-        Person *per = [[Person alloc]init];
+//        Person *per = [[Person alloc]init];
+//        Student *stu = [[Student alloc]init];
+        [NewStudent1 new];
+        
 //        Person *person = [Person new];
 //        Class cls = object_getClass(person);
 //        //[person sayYes];

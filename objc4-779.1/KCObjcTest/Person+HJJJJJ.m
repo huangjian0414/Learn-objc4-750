@@ -9,9 +9,9 @@
 #import "runtime.h"
 
 @implementation Person (HJJJJJ)
-+(void)load{
-    NSLog(@"HJJJJ Load");
-}
+//+(void)load{
+//    NSLog(@"HJJJJ Load");
+//}
 
 -(void)sayYes{
     NSLog(@"HJJJJ sayYes");

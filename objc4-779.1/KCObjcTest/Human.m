@@ -8,7 +8,10 @@
 #import "Human.h"
 
 @implementation Human
-+ (void)load{
-    NSLog(@"Human load");
+//+ (void)load{
+//    NSLog(@"Human load");
+//}
++(void)initialize{
+    NSLog(@"Human initialize %@",self);
 }
 @end
