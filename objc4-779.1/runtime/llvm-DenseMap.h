@@ -265,12 +265,15 @@ public:
   template <typename... Ts>
   std::pair<iterator, bool> try_emplace(const KeyT &Key, Ts &&... Args) {
     BucketT *TheBucket;
+    //查找Bucket 如果map中已经存在，则直接返回， seconde 为false
     if (LookupBucketFor(Key, TheBucket))
+      //std::make_pair生成相应的键值对
       return std::make_pair(
                makeIterator(TheBucket, getBucketsEnd(), true),
                false); // Already in map.
 
     // Otherwise, insert the new element.
+    // 没有找到，则通过InsertIntoBucket插入map。 seconde 为true
     TheBucket = InsertIntoBucket(TheBucket, Key, std::forward<Ts>(Args)...);
     return std::make_pair(
              makeIterator(TheBucket, getBucketsEnd(), true),
@@ -637,6 +640,13 @@ private:
   /// FoundBucket.  If the bucket contains the key and a value, this returns
   /// true, otherwise it returns a bucket with an empty marker or tombstone and
   /// returns false.
+  /*
+  * 获取哈希函数的下标
+  * 根据下标获取`BucketT`
+  * 如果找到，返回`true`，并返回`BucketT`。
+  * 如果没有找到，调整`下标`
+  * 如果查找完成后仍然没有找到，返回`false`，并返回空`桶子`
+   */
   template<typename LookupKeyT>
   bool LookupBucketFor(const LookupKeyT &Val,
                        const BucketT *&FoundBucket) const {
@@ -656,13 +666,17 @@ private:
            !KeyInfoT::isEqual(Val, TombstoneKey) &&
            "Empty/Tombstone value shouldn't be inserted into map!");
 
+    // 哈希函数获取下标
     unsigned BucketNo = getHashValue(Val) & (NumBuckets-1);
     unsigned ProbeAmt = 1;
     while (true) {
+      /// 递归获取BucketT
       const BucketT *ThisBucket = BucketsPtr + BucketNo;
       // Found Val's bucket?  If so, return it.
       if (LLVM_LIKELY(KeyInfoT::isEqual(Val, ThisBucket->getFirst()))) {
+        //找到了  赋值
         FoundBucket = ThisBucket;
+        // 返回跳出循环
         return true;
       }
 
@@ -671,7 +685,9 @@ private:
       if (LLVM_LIKELY(KeyInfoT::isEqual(ThisBucket->getFirst(), EmptyKey))) {
         // If we've already seen a tombstone while probing, fill it in instead
         // of the empty bucket we eventually probed to.
+        //找到了空的桶  赋值
         FoundBucket = FoundTombstone ? FoundTombstone : ThisBucket;
+        // 返回，跳出函数
         return false;
       }
 
@@ -684,21 +700,27 @@ private:
       if (ValueInfoT::isPurgeable(ThisBucket->getSecond())  &&  !FoundTombstone)
         FoundTombstone = ThisBucket;
 
-      // Otherwise, it's a hash collision or a tombstone, continue quadratic
+      // Otherwise, it's a hash collision or a tombstone, continue quadratic /// 继续探测
       // probing.
       if (ProbeAmt > NumBuckets) {
         FatalCorruptHashTables(BucketsPtr, NumBuckets);
       }
+      // 调整hash的下标
       BucketNo += ProbeAmt++;
       BucketNo &= (NumBuckets-1);
     }
   }
-
+  
+  // 重载函数
   template <typename LookupKeyT>
+  // 通过参数可以看到区别，即BucketT的修饰没有const
   bool LookupBucketFor(const LookupKeyT &Val, BucketT *&FoundBucket) {
+    // 空的桶
     const BucketT *ConstFoundBucket;
+    // 是否查找到的结果
     bool Result = const_cast<const DenseMapBase *>(this)
-      ->LookupBucketFor(Val, ConstFoundBucket);
+      ->LookupBucketFor(Val, ConstFoundBucket); //调用上面的LookupBucketFor
+    // 如果查到了，就把内容返回到传入的桶里。
     FoundBucket = const_cast<BucketT *>(ConstFoundBucket);
     return Result;
   }

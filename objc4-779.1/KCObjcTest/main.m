@@ -24,10 +24,12 @@ int main(int argc, const char * argv[]) {
 //        Student *stu = [[Student alloc]init];
         [NewStudent1 new];
         
-//        Person *person = [Person new];
+        Person *person = [Person new];
+        person.isDealToken = @"haha";
+        person.isDealToken = NULL;
 //        Class cls = object_getClass(person);
-//        //[person sayYes];
-//        [person sayNo];
+        //[person sayYes];
+        [person sayNo];
         
     }
     return 0;

@@ -8,6 +8,8 @@
 #import "Person+HJJJJJ.h"
 #import "runtime.h"
 
+static NSString *nameKey = @"TimeStamp";
+
 @implementation Person (HJJJJJ)
 //+(void)load{
 //    NSLog(@"HJJJJ Load");
@@ -30,5 +32,14 @@
             ((void(*)(void))lastIMP)();
         }
     }
+}
+
+-(void)setIsDealToken:(NSString *)isDealToken
+{
+    objc_setAssociatedObject(self, &nameKey, isDealToken, 3);
+}
+-(NSString *)isDealToken
+{
+    return objc_getAssociatedObject(self, &nameKey);
 }
 @end
