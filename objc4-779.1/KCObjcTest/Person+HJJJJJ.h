@@ -10,6 +10,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface Person (HJJJJJ)
+@property (nonatomic,copy)NSString *isDealToken;
 
 -(void)sayYes;
 -(void)sayNo;

@@ -106,7 +106,7 @@ typedef DenseMap<DisguisedPtr<objc_object>, ObjectAssociationMap> AssociationsHa
 
 class AssociationsManager {
     using Storage = ExplicitInitDenseMap<DisguisedPtr<objc_object>, ObjectAssociationMap>;
-    static Storage _mapStorage;
+    static Storage _mapStorage;///静态变量，全局唯一
 
 public:
     AssociationsManager()   { AssociationsManagerLock.lock(); }
@@ -141,17 +141,22 @@ _object_get_associative_reference(id object, const void *key)
     {
         AssociationsManager manager;
         AssociationsHashMap &associations(manager.get());
+        /// 通过object 找到 iterator 迭代器
         AssociationsHashMap::iterator i = associations.find((objc_object *)object);
         if (i != associations.end()) {
+            // 获取ObjectAssociationMap
             ObjectAssociationMap &refs = i->second;
+            //根据key查找ObjectAssociationMap
             ObjectAssociationMap::iterator j = refs.find(key);
             if (j != refs.end()) {
+                //获取ObjectAssociation
                 association = j->second;
+                //根据当前的value以及关联策略policy进行判断是否需要对当前的值进行retain
                 association.retainReturnedValue();
             }
         }
     }
-
+    //返回value 内部会根据当前的value以及关联策略policy进行判断是否需要对当前的值进行autorelease
     return association.autoreleaseReturnedValue();
 }
 
@@ -165,11 +170,12 @@ _object_set_associative_reference(id object, const void *key, id value, uintptr_
 
     if (object->getIsa()->forbidsAssociatedObjects())
         _objc_fatal("objc_setAssociatedObject called on instance (%p) of class %s which does not allow associated objects", object, object_getClassName(object));
-
+    /// 通过object 生成 DisguisedPtr ，后面作为AssociationsHashMap 的key
     DisguisedPtr<objc_object> disguised{(objc_object *)object};
     ObjcAssociation association{policy, value};
 
     // retain the new value (if any) outside the lock.
+    //根据策略类型进行处理
     association.acquireValue();
 
     {
@@ -177,29 +183,35 @@ _object_set_associative_reference(id object, const void *key, id value, uintptr_
         AssociationsHashMap &associations(manager.get());
 
         if (value) {
+            /// 根据disguised 查找 返回pair 类对
             auto refs_result = associations.try_emplace(disguised, ObjectAssociationMap{});
-            if (refs_result.second) {
+            if (refs_result.second) { //yes 即没有找到 ，就是第一次建立关联
                 /* it's the first association we make */
+                /// 将isa 的has_assoc标志位 设为true
                 object->setHasAssociatedObjects();
             }
 
             /* establish or replace the association */
+            // 得到一个空的桶
             auto &refs = refs_result.first->second;
+            // 查找当前的key是否有association关联对象
             auto result = refs.try_emplace(key, std::move(association));
-            if (!result.second) {
+            if (!result.second) { // 找到了，则swap交换 ，没找到即已经插入了
                 association.swap(result.first->second);
             }
-        } else {
+        } else {// value 为空· 移除关联
+            /// 通过disguised 找到 iterator 迭代器
             auto refs_it = associations.find(disguised);
             if (refs_it != associations.end()) {
                 auto &refs = refs_it->second;
                 auto it = refs.find(key);
                 if (it != refs.end()) {
+                    /// 交换 原来ObjectAssociation里的value 置为空
                     association.swap(it->second);
-                    refs.erase(it);
-                    if (refs.size() == 0) {
-                        associations.erase(refs_it);
-
+                    /// 从map里擦除
+                    refs.erase(it);//清理ObjectAssociationMap的it
+                    if (refs.size() == 0) {/// 没有关联了
+                        associations.erase(refs_it);// 清理AssociationsHashMap的refs_it
                     }
                 }
             }
@@ -207,6 +219,7 @@ _object_set_associative_reference(id object, const void *key, id value, uintptr_
     }
 
     // release the old value (outside of the lock).
+    /// 释放旧值
     association.releaseHeldValue();
 }
 

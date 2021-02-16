@@ -17,6 +17,8 @@ int main(int argc, const char * argv[]) {
         NSLog(@"Hello, World!");
         
         Person *person = [Person new];
+        person.isDealToken = @"haha";
+        person.isDealToken = NULL;
         Class cls = object_getClass(person);
         //[person sayYes];
         [person sayNo];
