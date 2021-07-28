@@ -7597,9 +7597,9 @@ void *objc_destructInstance(id obj)
         bool assoc = obj->hasAssociatedObjects();
 
         // This order is important.
-        if (cxx) object_cxxDestruct(obj);
-        if (assoc) _object_remove_assocations(obj);
-        obj->clearDeallocating();
+        if (cxx) object_cxxDestruct(obj);/// 调用C++析构函数
+        if (assoc) _object_remove_assocations(obj);// 关联对象remove相关
+        obj->clearDeallocating();// 清理引用
     }
 
     return obj;

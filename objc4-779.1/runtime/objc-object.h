@@ -435,11 +435,11 @@ objc_object::rootDealloc()
 {
     if (isTaggedPointer()) return;  // fixme necessary?
 
-    if (fastpath(isa.nonpointer  &&  
-                 !isa.weakly_referenced  &&  
-                 !isa.has_assoc  &&  
-                 !isa.has_cxx_dtor  &&  
-                 !isa.has_sidetable_rc))
+    if (fastpath(isa.nonpointer  &&  ///是否isa优化
+                 !isa.weakly_referenced  &&  ///是否弱引用
+                 !isa.has_assoc  &&  /// 是否有关联对象
+                 !isa.has_cxx_dtor  &&  ///是否自定义c++析构
+                 !isa.has_sidetable_rc))/// 是否用到sidetable
     {
         assert(!sidetable_present());
         free(this);

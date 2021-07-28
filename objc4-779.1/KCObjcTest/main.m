@@ -22,14 +22,24 @@ int main(int argc, const char * argv[]) {
         //NSObject *obj = [[NSObject alloc]init];
 //        Person *per = [[Person alloc]init];
 //        Student *stu = [[Student alloc]init];
-        [NewStudent1 new];
-        
-        Person *person = [Person new];
-        person.isDealToken = @"haha";
-        person.isDealToken = NULL;
+//        [NewStudent1 new];
+//
+//        Person *person = [Person new];
+//        person.isDealToken = @"haha";
+//        person.isDealToken = NULL;
 //        Class cls = object_getClass(person);
         //[person sayYes];
-        [person sayNo];
+//        [person sayNo];
+//        NSObject *obj = [NSObject new];
+//        __block NSObject *newObj = obj;
+//
+//        void (^mallocBlock)(void) = ^void {
+//            NSLog(@"%@",newObj);
+//        };
+        NSObject *obj = [[NSObject alloc]init];
+        __weak NSObject *weakObj = obj;
+        
+        NSLog(@" obj isa_t = %p", *(void **)(__bridge void*)obj);
         
     }
     return 0;

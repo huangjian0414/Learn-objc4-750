@@ -78,16 +78,18 @@ typedef DisguisedPtr<objc_object *> weak_referrer_t;
 #define REFERRERS_OUT_OF_LINE 2
 
 struct weak_entry_t {
-    DisguisedPtr<objc_object> referent;
+    DisguisedPtr<objc_object> referent;// 被弱引用的对象
+    
+    // 引用该对象的对象列表，联合
     union {
-        struct {
-            weak_referrer_t *referrers;
-            uintptr_t        out_of_line_ness : 2;
-            uintptr_t        num_refs : PTR_MINUS_2;
-            uintptr_t        mask;
-            uintptr_t        max_hash_displacement;
+        struct {/// 引用个数大于4
+            weak_referrer_t *referrers;// 弱引用该对象的对象列表的动态数组
+            uintptr_t        out_of_line_ness : 2;// 是否使用动态数组标记位
+            uintptr_t        num_refs : PTR_MINUS_2;// 动态数组中元素的个数
+            uintptr_t        mask;       // 用于hash确定动态数组index
+            uintptr_t        max_hash_displacement;// 最大的hash冲突次数
         };
-        struct {
+        struct {/// 引用个数小于4
             // out_of_line_ness field is low bits of inline_referrers[1]
             weak_referrer_t  inline_referrers[WEAK_INLINE_COUNT];
         };
@@ -117,10 +119,10 @@ struct weak_entry_t {
  * and weak_entry_t structs as their values.
  */
 struct weak_table_t {
-    weak_entry_t *weak_entries;
-    size_t    num_entries;
-    uintptr_t mask;
-    uintptr_t max_hash_displacement;
+    weak_entry_t *weak_entries;/// 存储弱引用对象的相关信息
+    size_t    num_entries;/// 元素个数
+    uintptr_t mask; /// hash数组长度-1，用于和hash值做位与计算，来确定数组下标(hash数组的长度，而不是元素个数。比如，数组长度可能是64，而元素个数仅存了2个)
+    uintptr_t max_hash_displacement;/// 可能会发生的hash冲突的最大次数
 };
 
 /// Adds an (object, weak pointer) pair to the weak table.

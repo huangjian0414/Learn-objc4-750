@@ -393,10 +393,10 @@ weak_register_no_lock(weak_table_t *weak_table, id referent_id,
 {
     objc_object *referent = (objc_object *)referent_id;
     objc_object **referrer = (objc_object **)referrer_id;
-
+    ///referent为nil 或 referent 采用了TaggedPointer计数方式，直接返回
     if (!referent  ||  referent->isTaggedPointer()) return referent_id;
 
-    // ensure that the referenced object is viable
+    /// 确保被引用的对象可用
     bool deallocating;
     if (!referent->ISA()->hasCustomRR()) {
         deallocating = referent->rootIsDeallocating();
@@ -412,7 +412,7 @@ weak_register_no_lock(weak_table_t *weak_table, id referent_id,
         deallocating =
             ! (*allowsWeakReference)(referent, @selector(allowsWeakReference));
     }
-
+    /// 正在析构的对象，不能够被弱引用
     if (deallocating) {
         if (crashIfDeallocating) {
             _objc_fatal("Cannot form weak reference to instance (%p) of "
@@ -426,10 +426,13 @@ weak_register_no_lock(weak_table_t *weak_table, id referent_id,
 
     // now remember it and where it is being stored
     weak_entry_t *entry;
-    if ((entry = weak_entry_for_referent(weak_table, referent))) {
+    ///在 weak_table中通过referent找对应的weak_entry
+    if ((entry = weak_entry_for_referent(weak_table, referent))) {/// 找到了
+        /// 将referrer插入到weak_entry_t的引用数组中
         append_referrer(entry, referrer);
     } 
-    else {
+    else {/// 没找到
+        /// 新建一个
         weak_entry_t new_entry(referent, referrer);
         weak_grow_maybe(weak_table);
         weak_entry_insert(weak_table, &new_entry);
@@ -462,7 +465,7 @@ void
 weak_clear_no_lock(weak_table_t *weak_table, id referent_id) 
 {
     objc_object *referent = (objc_object *)referent_id;
-
+    /// 找到referent在weak_table中对应的weak_entry_t
     weak_entry_t *entry = weak_entry_for_referent(weak_table, referent);
     if (entry == nil) {
         /// XXX shouldn't happen, but does with mismatched CF/objc
@@ -473,7 +476,7 @@ weak_clear_no_lock(weak_table_t *weak_table, id referent_id)
     // zero out references
     weak_referrer_t *referrers;
     size_t count;
-    
+    // 找出weak引用referent的weak指针地址数组以及数组长度
     if (entry->out_of_line()) {
         referrers = entry->referrers;
         count = TABLE_SIZE(entry);
@@ -484,6 +487,7 @@ weak_clear_no_lock(weak_table_t *weak_table, id referent_id)
     }
     
     for (size_t i = 0; i < count; ++i) {
+        /// 取出每个weak ptr的地址
         objc_object **referrer = referrers[i];
         if (referrer) {
             if (*referrer == referent) {
